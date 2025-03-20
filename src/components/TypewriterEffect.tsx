@@ -46,16 +46,14 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
           setDisplayText(displayText.substring(0, displayText.length - 1));
         }, deletingSpeed);
       } else {
-        // Move to the next text, or back to the first if we've reached the end
-        if (loop || currentIndex < texts.length - 1) {
-          setCurrentIndex((prevIndex) => (prevIndex + 1) % texts.length);
-          setIsTyping(true);
-        }
+        // Always loop through texts, regardless of the loop prop
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % texts.length);
+        setIsTyping(true);
       }
     }
 
     return () => clearTimeout(timeout);
-  }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime, loop]);
+  }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime]);
 
   return (
     <span className={`inline-flex items-center ${className}`}>

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { X, Github, Mail } from "lucide-react";
+import { X, Github, Mail, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -37,6 +38,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | null>(null);
 
   const { login, signup, loginWithGoogle, loginWithGithub } = useAuth();
 
@@ -69,6 +71,37 @@ const AuthModal: React.FC<AuthModalProps> = ({
         delete newErrors[name];
         return newErrors;
       });
+    }
+
+    if (name === 'password') {
+      checkPasswordStrength(value);
+    }
+  };
+
+  const checkPasswordStrength = (password: string) => {
+    if (!password) {
+      setPasswordStrength(null);
+      return;
+    }
+    
+    if (password.length < 6) {
+      setPasswordStrength("weak");
+      return;
+    }
+    
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    const strength = [hasUpperCase, hasLowerCase, hasNumbers, hasSpecialChars].filter(Boolean).length;
+    
+    if (strength < 2) {
+      setPasswordStrength("weak");
+    } else if (strength < 4) {
+      setPasswordStrength("medium");
+    } else {
+      setPasswordStrength("strong");
     }
   };
 
@@ -121,6 +154,10 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (success) {
         handleClose?.();
       }
+    } catch (error) {
+      toast.error("Authentication error", { 
+        description: "Please check your credentials and try again" 
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -136,6 +173,22 @@ const AuthModal: React.FC<AuthModalProps> = ({
       // Modal will be closed by auth state change
     } catch (error) {
       console.error(`${provider} login error:`, error);
+      toast.error(`${provider} login failed`, {
+        description: "Please try again or use another method"
+      });
+    }
+  };
+
+  const getPasswordStrengthClass = () => {
+    switch (passwordStrength) {
+      case "weak":
+        return "bg-red-500";
+      case "medium":
+        return "bg-yellow-500";
+      case "strong":
+        return "bg-green-500";
+      default:
+        return "bg-gray-300";
     }
   };
 
@@ -167,16 +220,16 @@ const AuthModal: React.FC<AuthModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => handleSocialLogin('github')}
-              className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors group"
             >
-              <Github className="h-4 w-4" />
+              <Github className="h-4 w-4 group-hover:text-primary transition-colors" />
               <span>GitHub</span>
             </button>
             <button
               onClick={() => handleSocialLogin('google')}
-              className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors group"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-4 w-4 group-hover:text-primary transition-colors" />
               <span>Google</span>
             </button>
           </div>
@@ -211,7 +264,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       )}
                     />
                     {errors.firstName && (
-                      <p className="text-xs text-destructive">{errors.firstName}</p>
+                      <p className="text-xs text-destructive flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" /> {errors.firstName}
+                      </p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -231,7 +286,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                       )}
                     />
                     {errors.lastName && (
-                      <p className="text-xs text-destructive">{errors.lastName}</p>
+                      <p className="text-xs text-destructive flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" /> {errors.lastName}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -277,7 +334,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
                 )}
               />
               {errors.email && (
-                <p className="text-xs text-destructive">{errors.email}</p>
+                <p className="text-xs text-destructive flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" /> {errors.email}
+                </p>
               )}
             </div>
 
@@ -304,17 +363,48 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   errors.password ? "border-destructive" : "border-input"
                 )}
               />
+              {activeType === "signup" && formData.password && (
+                <div className="w-full mt-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${getPasswordStrengthClass()} transition-all duration-300`} 
+                    style={{ width: passwordStrength === "weak" ? "33%" : passwordStrength === "medium" ? "66%" : "100%" }}
+                  ></div>
+                </div>
+              )}
               {errors.password && (
-                <p className="text-xs text-destructive">{errors.password}</p>
+                <p className="text-xs text-destructive flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" /> {errors.password}
+                </p>
+              )}
+              {activeType === "signup" && passwordStrength && !errors.password && (
+                <p className={`text-xs flex items-center ${
+                  passwordStrength === "weak" ? "text-red-500" : 
+                  passwordStrength === "medium" ? "text-yellow-500" : 
+                  "text-green-500"
+                }`}>
+                  {passwordStrength === "weak" && <AlertCircle className="h-3 w-3 mr-1" />}
+                  {passwordStrength === "medium" && <AlertCircle className="h-3 w-3 mr-1" />}
+                  {passwordStrength === "strong" && <CheckCircle className="h-3 w-3 mr-1" />}
+                  {passwordStrength === "weak" ? "Weak password" : 
+                   passwordStrength === "medium" ? "Medium strength" : 
+                   "Strong password"}
+                </p>
               )}
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-lg transition-colors hover:bg-primary/90 disabled:opacity-70"
+              className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-lg transition-colors hover:bg-primary/90 disabled:opacity-70 flex items-center justify-center"
             >
-              {isSubmitting ? "Processing..." : activeType === "login" ? "Log In" : "Create Account"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  Processing...
+                </>
+              ) : (
+                activeType === "login" ? "Log In" : "Create Account"
+              )}
             </button>
 
             <div className="text-center text-sm">
