@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -11,19 +12,21 @@ interface NavbarProps {
   onLoginClick?: () => void;
   onSignupClick?: () => void;
   onContactClick?: () => void;
+  className?: string;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
   onLoginClick,
   onSignupClick,
-  onContactClick
+  onContactClick,
+  className
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalType, setAuthModalType] = useState<"login" | "signup">("login");
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, userData } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -88,10 +91,11 @@ const Navbar: React.FC<NavbarProps> = ({
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6",
+          "transition-all duration-300 py-4 px-6",
           isScrolled
             ? "bg-white/80 dark:bg-black/80 backdrop-blur-lg shadow-sm"
-            : "bg-transparent"
+            : "bg-transparent",
+          className
         )}
       >
         <div className="container mx-auto">

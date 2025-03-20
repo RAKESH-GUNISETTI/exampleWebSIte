@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Features from "@/components/Features";
 import AuthModal from "@/components/AuthModal";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import ContactDialog from "@/components/ContactDialog";
 import Footer from "@/components/Footer";
 import { ArrowRight, Sparkles, Brain, Code, Trophy } from "lucide-react";
+import { Section } from "@/components/ui/section";
 
 const Index = () => {
   const { isLoggedIn } = useAuth();
@@ -19,11 +20,24 @@ const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [authType, setAuthType] = useState<"login" | "signup">("login");
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [prevScrollPos, setPrevScrollPos] = useState(0);
+  const [visible, setVisible] = useState(true);
 
   // Scroll to top on component mount
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    
+    // For navbar scroll behavior
+    const handleScroll = () => {
+      const currentScrollPos = window.scrollY;
+      setVisible(prevScrollPos > currentScrollPos || currentScrollPos < 10);
+      setPrevScrollPos(currentScrollPos);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prevScrollPos]);
 
   const handleGetStarted = () => {
     if (isLoggedIn) {
@@ -42,6 +56,13 @@ const Index = () => {
     setIsContactOpen(true);
   };
 
+  const scrollToSection = (section: string) => {
+    const element = document.getElementById(section);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen rainbow-bg">
       <Navbar 
@@ -54,11 +75,14 @@ const Index = () => {
           setIsAuthModalOpen(true);
         }}
         onContactClick={handleContactClick}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          visible ? 'translate-y-0' : '-translate-y-full'
+        }`}
       />
       
       <main>
-        <section className="container py-20 text-center">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-balance animate-fade-in">
+        <section ref={heroRef} className="container min-h-screen flex flex-col justify-center py-20 text-center animate-fade-in">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-balance">
             Welcome to SkillNest Collective - <br />
             <TypewriterEffect
               texts={[
@@ -76,11 +100,11 @@ const Index = () => {
             />
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 text-balance animate-fade-in delay-75">
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 text-balance animate-fade-in-delay-75">
             Enhance your technical skills with interactive challenges, AI assistance, and a supportive learning community.
           </p>
           
-          <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in delay-150">
+          <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in-delay-150">
             <Button 
               size="lg" 
               onClick={handleGetStarted}
@@ -99,21 +123,21 @@ const Index = () => {
               <Sparkles className="ml-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
             </Button>
           </div>
-          
-          <div className="py-10 animate-fade-in delay-200">
-            <div className="max-w-4xl mx-auto glass-card p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300">
-              <h2 className="text-2xl font-bold mb-6 flex items-center justify-center">
-                <Brain className="mr-2 h-6 w-6 text-primary" />
-                AI Learning Assistant
-              </h2>
-              <LandingPageChat />
-            </div>
-          </div>
         </section>
         
-        <EnhancedTechNewsSection />
+        <Section id="ai-assistant" className="py-10 animate-fade-in-delayed">
+          <div className="max-w-4xl mx-auto glass-card p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300">
+            <h2 className="text-2xl font-bold mb-6 flex items-center justify-center">
+              <Brain className="mr-2 h-6 w-6 text-primary" />
+              AI Learning Assistant
+            </h2>
+            <LandingPageChat />
+          </div>
+        </Section>
         
         <Features />
+        
+        <EnhancedTechNewsSection />
       </main>
       
       <Footer />

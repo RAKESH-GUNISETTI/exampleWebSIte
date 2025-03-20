@@ -9,7 +9,7 @@ export const Section = React.forwardRef<HTMLDivElement, SectionProps>(
     return (
       <section
         ref={ref}
-        className={cn("w-full py-16", className)}
+        className={cn("w-full py-16 px-4 container mx-auto", className)}
         {...props}
       >
         {children}
