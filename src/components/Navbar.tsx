@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -8,7 +7,17 @@ import AuthModal from "./AuthModal";
 import ContactDialog from "./ContactDialog";
 import { useAuth } from "@/context/AuthContext";
 
-const Navbar = () => {
+interface NavbarProps {
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
+  onContactClick?: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({
+  onLoginClick,
+  onSignupClick,
+  onContactClick
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -41,8 +50,23 @@ const Navbar = () => {
   const closeMenu = () => setIsMenuOpen(false);
 
   const openAuthModal = (type: "login" | "signup") => {
-    setAuthModalType(type);
-    setIsAuthModalOpen(true);
+    if (onLoginClick && type === "login") {
+      onLoginClick();
+    } else if (onSignupClick && type === "signup") {
+      onSignupClick();
+    } else {
+      setAuthModalType(type);
+      setIsAuthModalOpen(true);
+    }
+    closeMenu();
+  };
+
+  const handleContactClick = () => {
+    if (onContactClick) {
+      onContactClick();
+    } else {
+      setIsContactDialogOpen(true);
+    }
     closeMenu();
   };
 
@@ -109,7 +133,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <button
-                onClick={() => setIsContactDialogOpen(true)}
+                onClick={handleContactClick}
                 className="px-4 py-2 rounded-full text-sm transition-all duration-200 hover:bg-accent/80 text-foreground/80 flex items-center"
               >
                 <HelpCircle className="h-4 w-4 mr-2" /> Contact
@@ -202,10 +226,7 @@ const Navbar = () => {
                 </Link>
               ))}
               <button
-                onClick={() => {
-                  setIsContactDialogOpen(true);
-                  closeMenu();
-                }}
+                onClick={handleContactClick}
                 className="px-4 py-3 rounded-lg flex items-center transition-all duration-200 hover:bg-accent/80 text-foreground/80"
               >
                 <HelpCircle className="h-4 w-4 mr-2" /> Contact

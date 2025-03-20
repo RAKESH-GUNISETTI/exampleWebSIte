@@ -1,20 +1,14 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Bot, ArrowLeft, Braces, Code, Database, Brain } from "lucide-react";
-import { isTechnicalQuestion, chatWithGemini } from "@/lib/gemini";
+import { isTechnicalQuestion, chatWithGemini, ChatMessage } from "@/lib/gemini";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-interface Message {
-  role: "user" | "model";
-  content: string;
-}
-
 const ChatSection = () => {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -49,7 +43,7 @@ const ChatSection = () => {
         toast.warning("Please ask a technical question");
       } else {
         // Process the technical question
-        const allMessages = [...messages, { role: "user", content: userMessage }];
+        const allMessages = [...messages, { role: "user", content: userMessage }] as ChatMessage[];
         const response = await chatWithGemini(allMessages);
         
         setMessages((prev) => [...prev, { role: "model", content: response }]);

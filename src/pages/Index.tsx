@@ -103,9 +103,10 @@ const Index = () => {
       </main>
       
       <AuthModal 
-        open={isAuthModalOpen} 
-        onOpenChange={setIsAuthModalOpen} 
-        defaultTab={authType}
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        type={authType}
+        setType={setAuthType}
       />
       
       <ContactDialog 
