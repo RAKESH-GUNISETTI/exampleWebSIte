@@ -1,0 +1,295 @@
+
+import React, { useState } from "react";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  type: "login" | "signup";
+  setType: (type: "login" | "signup") => void;
+  setIsLoggedIn: (value: boolean) => void;
+}
+
+const AuthModal: React.FC<AuthModalProps> = ({
+  isOpen,
+  onClose,
+  type,
+  setType,
+  setIsLoggedIn,
+}) => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    profession: "student",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear error when field is modified
+    if (errors[name]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (type === "signup") {
+      if (!formData.firstName.trim()) {
+        newErrors.firstName = "First name is required";
+      }
+      if (!formData.lastName.trim()) {
+        newErrors.lastName = "Last name is required";
+      }
+    }
+
+    // Email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email is invalid";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    if (type === "signup") {
+      // Store user data in localStorage (in a real app, this would be an API call)
+      localStorage.setItem("user", JSON.stringify({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        profession: formData.profession,
+        coins: 0,
+        progress: { coding: 0, algorithms: 0, frameworks: 0 }
+      }));
+      localStorage.setItem("isLoggedIn", "true");
+      setIsLoggedIn(true);
+      toast.success("Account created successfully!");
+    } else {
+      // For demo, just check if the email and password match predetermined values
+      // In a real app, this would be an API call
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("user", JSON.stringify({
+        firstName: "Demo",
+        lastName: "User",
+        email: formData.email,
+        profession: "student",
+        coins: 150,
+        progress: { coding: 45, algorithms: 30, frameworks: 65 }
+      }));
+      setIsLoggedIn(true);
+      toast.success("Logged in successfully!");
+    }
+
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">
+      <div
+        className={cn(
+          "bg-card rounded-xl shadow-xl w-full max-w-md mx-auto overflow-hidden animate-slide-in",
+          "border border-border"
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center p-4 border-b border-border">
+          <h2 className="text-xl font-semibold">
+            {type === "login" ? "Log In" : "Sign Up"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-accent/80 transition-colors"
+            aria-label="Close modal"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {type === "signup" && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="firstName" className="text-sm font-medium">
+                    First Name
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                      "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                      errors.firstName ? "border-destructive" : "border-input"
+                    )}
+                  />
+                  {errors.firstName && (
+                    <p className="text-xs text-destructive">{errors.firstName}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="lastName" className="text-sm font-medium">
+                    Last Name
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                      "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                      errors.lastName ? "border-destructive" : "border-input"
+                    )}
+                  />
+                  {errors.lastName && (
+                    <p className="text-xs text-destructive">{errors.lastName}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="profession" className="text-sm font-medium">
+                  Profession
+                </label>
+                <select
+                  id="profession"
+                  name="profession"
+                  value={formData.profession}
+                  onChange={handleChange}
+                  className={cn(
+                    "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                    "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                    "border-input"
+                  )}
+                >
+                  <option value="student">Student</option>
+                  <option value="employee">Employee</option>
+                  <option value="freelancer">Freelancer</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium">
+              Email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={cn(
+                "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                errors.email ? "border-destructive" : "border-input"
+              )}
+            />
+            {errors.email && (
+              <p className="text-xs text-destructive">{errors.email}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+              {type === "login" && (
+                <a href="#" className="text-xs text-primary hover:underline">
+                  Forgot password?
+                </a>
+              )}
+            </div>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={cn(
+                "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                errors.password ? "border-destructive" : "border-input"
+              )}
+            />
+            {errors.password && (
+              <p className="text-xs text-destructive">{errors.password}</p>
+            )}
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-lg transition-colors hover:bg-primary/90"
+          >
+            {type === "login" ? "Log In" : "Create Account"}
+          </button>
+
+          <div className="text-center text-sm">
+            {type === "login" ? (
+              <p>
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setType("signup")}
+                  className="text-primary hover:underline"
+                >
+                  Sign up
+                </button>
+              </p>
+            ) : (
+              <p>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setType("login")}
+                  className="text-primary hover:underline"
+                >
+                  Log in
+                </button>
+              </p>
+            )}
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default AuthModal;
