@@ -9,7 +9,131 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      challenge_completions: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          id?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          category: string
+          created_at: string | null
+          deadline: string | null
+          description: string
+          difficulty: string
+          id: string
+          points: number
+          title: string
+          type: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          deadline?: string | null
+          description: string
+          difficulty: string
+          id?: string
+          points: number
+          title: string
+          type: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          deadline?: string | null
+          description?: string
+          difficulty?: string
+          id?: string
+          points?: number
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          coins: number | null
+          created_at: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          profession: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          coins?: number | null
+          created_at?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          profession?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          coins?: number | null
+          created_at?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          profession?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          algorithms: number | null
+          coding: number | null
+          frameworks: number | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          algorithms?: number | null
+          coding?: number | null
+          frameworks?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          algorithms?: number | null
+          coding?: number | null
+          frameworks?: number | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

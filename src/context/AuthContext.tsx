@@ -37,18 +37,24 @@ interface SignupFormData {
   profession: string;
 }
 
-const defaultUserData: UserData = {
-  firstName: "Demo",
-  lastName: "User",
-  email: "demo@example.com",
-  profession: "student",
-  coins: 150,
-  progress: {
-    coding: 45,
-    algorithms: 30,
-    frameworks: 65,
-  },
-};
+interface ProfileData {
+  id: string;
+  first_name: string;
+  last_name: string;
+  profession: string;
+  coins: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ProgressData {
+  id: string;
+  user_id: string;
+  coding: number;
+  algorithms: number;
+  frameworks: number;
+  updated_at: string;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -95,14 +101,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserData = async (userId: string) => {
     try {
-      // In a real app with a profiles table, we'd fetch user data here
-      // For now, set default data
+      // Fetch profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+        throw profileError;
+      }
+
+      // Fetch progress data
+      const { data: progressData, error: progressError } = await supabase
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+        
+      if (progressError) {
+        console.error("Error fetching progress:", progressError);
+        throw progressError;
+      }
+
+      // Combine the data
+      const profile = profileData as ProfileData;
+      const progress = progressData as ProgressData;
+
       setUserData({
-        ...defaultUserData,
-        email: user?.email || defaultUserData.email,
+        firstName: profile.first_name || "",
+        lastName: profile.last_name || "",
+        email: user?.email || "",
+        profession: profile.profession || "",
+        coins: profile.coins || 0,
+        progress: {
+          coding: progress.coding || 0,
+          algorithms: progress.algorithms || 0,
+          frameworks: progress.frameworks || 0,
+        },
       });
     } catch (error) {
       console.error("Error fetching user data:", error);
+      // If there's an error, set default data
+      setUserData({
+        firstName: user?.user_metadata?.first_name || "User",
+        lastName: user?.user_metadata?.last_name || "",
+        email: user?.email || "",
+        profession: user?.user_metadata?.profession || "Student",
+        coins: 0,
+        progress: {
+          coding: 0,
+          algorithms: 0,
+          frameworks: 0,
+        },
+      });
     }
   };
 

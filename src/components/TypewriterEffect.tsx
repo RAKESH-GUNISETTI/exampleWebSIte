@@ -7,6 +7,7 @@ interface TypewriterEffectProps {
   deletingSpeed?: number;
   pauseTime?: number;
   className?: string;
+  loop?: boolean;
 }
 
 const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
@@ -15,6 +16,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   deletingSpeed = 50,
   pauseTime = 2000,
   className = "",
+  loop = true,
 }) => {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -44,13 +46,16 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
           setDisplayText(displayText.substring(0, displayText.length - 1));
         }, deletingSpeed);
       } else {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % texts.length);
-        setIsTyping(true);
+        // Move to the next text, or back to the first if we've reached the end
+        if (loop || currentIndex < texts.length - 1) {
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % texts.length);
+          setIsTyping(true);
+        }
       }
     }
 
     return () => clearTimeout(timeout);
-  }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime]);
+  }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime, loop]);
 
   return (
     <span className={`inline-flex items-center ${className}`}>

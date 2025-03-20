@@ -1,4 +1,3 @@
-
 // Integration with Gemini AI
 
 // Use the new API key
