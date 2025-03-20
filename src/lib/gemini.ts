@@ -1,8 +1,8 @@
 
 // Integration with Gemini AI
 
-// The API key should ideally be stored in environment variables or handled by backend
-const API_KEY = "AIzaSyBhPMQdN-mfWxFK-elQ_46MV6KKUqE569Y";
+// Use the new API key
+const API_KEY = "AIzaSyBqYX5IhjMWGooK210CuPuuy3CEY9wEnV8";
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const TEXT_MODEL = "gemini-pro";
 const VISION_MODEL = "gemini-pro-vision";

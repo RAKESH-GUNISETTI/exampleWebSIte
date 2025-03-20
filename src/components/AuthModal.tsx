@@ -1,15 +1,15 @@
 
-import React, { useState } from "react";
-import { X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Github, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   type: "login" | "signup";
   setType: (type: "login" | "signup") => void;
-  setIsLoggedIn: (value: boolean) => void;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({
@@ -17,7 +17,6 @@ const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   type,
   setType,
-  setIsLoggedIn,
 }) => {
   const [formData, setFormData] = useState({
     firstName: "",
@@ -27,6 +26,26 @@ const AuthModal: React.FC<AuthModalProps> = ({
     profession: "student",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { login, signup, loginWithGoogle, loginWithGithub } = useAuth();
+
+  // Listen for custom event to open auth modal
+  useEffect(() => {
+    const handleOpenAuthModal = (e: CustomEvent) => {
+      setType(e.detail.type || "login");
+      // If the modal is not open, open it
+      if (!isOpen) {
+        onClose(); // This is a bit confusing, but onClose is actually used to toggle the state
+      }
+    };
+
+    window.addEventListener("open-auth-modal" as any, handleOpenAuthModal as EventListener);
+
+    return () => {
+      window.removeEventListener("open-auth-modal" as any, handleOpenAuthModal as EventListener);
+    };
+  }, [isOpen, onClose, setType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -72,43 +91,43 @@ const AuthModal: React.FC<AuthModalProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    if (type === "signup") {
-      // Store user data in localStorage (in a real app, this would be an API call)
-      localStorage.setItem("user", JSON.stringify({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        profession: formData.profession,
-        coins: 0,
-        progress: { coding: 0, algorithms: 0, frameworks: 0 }
-      }));
-      localStorage.setItem("isLoggedIn", "true");
-      setIsLoggedIn(true);
-      toast.success("Account created successfully!");
-    } else {
-      // For demo, just check if the email and password match predetermined values
-      // In a real app, this would be an API call
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("user", JSON.stringify({
-        firstName: "Demo",
-        lastName: "User",
-        email: formData.email,
-        profession: "student",
-        coins: 150,
-        progress: { coding: 45, algorithms: 30, frameworks: 65 }
-      }));
-      setIsLoggedIn(true);
-      toast.success("Logged in successfully!");
-    }
+    setIsSubmitting(true);
 
-    onClose();
+    try {
+      let success;
+
+      if (type === "signup") {
+        success = await signup(formData);
+      } else {
+        success = await login(formData.email, formData.password);
+      }
+
+      if (success) {
+        onClose();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'github') => {
+    try {
+      if (provider === 'google') {
+        await loginWithGoogle();
+      } else {
+        await loginWithGithub();
+      }
+      // Modal will be closed by auth state change
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
+    }
   };
 
   if (!isOpen) return null;
@@ -135,158 +154,188 @@ const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {type === "signup" && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-sm font-medium">
-                    First Name
-                  </label>
-                  <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className={cn(
-                      "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
-                      "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                      errors.firstName ? "border-destructive" : "border-input"
-                    )}
-                  />
-                  {errors.firstName && (
-                    <p className="text-xs text-destructive">{errors.firstName}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-sm font-medium">
-                    Last Name
-                  </label>
-                  <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className={cn(
-                      "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
-                      "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                      errors.lastName ? "border-destructive" : "border-input"
-                    )}
-                  />
-                  {errors.lastName && (
-                    <p className="text-xs text-destructive">{errors.lastName}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="profession" className="text-sm font-medium">
-                  Profession
-                </label>
-                <select
-                  id="profession"
-                  name="profession"
-                  value={formData.profession}
-                  onChange={handleChange}
-                  className={cn(
-                    "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
-                    "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                    "border-input"
-                  )}
-                >
-                  <option value="student">Student</option>
-                  <option value="employee">Employee</option>
-                  <option value="freelancer">Freelancer</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </>
-          )}
-
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={cn(
-                "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                errors.email ? "border-destructive" : "border-input"
-              )}
-            />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
-            )}
+        <div className="p-6 space-y-4">
+          {/* Social Login Buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => handleSocialLogin('github')}
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+            >
+              <Github className="h-4 w-4" />
+              <span>GitHub</span>
+            </button>
+            <button
+              onClick={() => handleSocialLogin('google')}
+              className="flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Google</span>
+            </button>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <label htmlFor="password" className="text-sm font-medium">
-                Password
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {type === "signup" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label htmlFor="firstName" className="text-sm font-medium">
+                      First Name
+                    </label>
+                    <input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      className={cn(
+                        "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                        errors.firstName ? "border-destructive" : "border-input"
+                      )}
+                    />
+                    {errors.firstName && (
+                      <p className="text-xs text-destructive">{errors.firstName}</p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="lastName" className="text-sm font-medium">
+                      Last Name
+                    </label>
+                    <input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      className={cn(
+                        "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                        "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                        errors.lastName ? "border-destructive" : "border-input"
+                      )}
+                    />
+                    {errors.lastName && (
+                      <p className="text-xs text-destructive">{errors.lastName}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="profession" className="text-sm font-medium">
+                    Profession
+                  </label>
+                  <select
+                    id="profession"
+                    name="profession"
+                    value={formData.profession}
+                    onChange={handleChange}
+                    className={cn(
+                      "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                      "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                      "border-input"
+                    )}
+                  >
+                    <option value="student">Student</option>
+                    <option value="employee">Employee</option>
+                    <option value="freelancer">Freelancer</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
               </label>
-              {type === "login" && (
-                <a href="#" className="text-xs text-primary hover:underline">
-                  Forgot password?
-                </a>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={cn(
+                  "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                  "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                  errors.email ? "border-destructive" : "border-input"
+                )}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email}</p>
               )}
             </div>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={cn(
-                "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-primary/50",
-                errors.password ? "border-destructive" : "border-input"
+
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </label>
+                {type === "login" && (
+                  <a href="#" className="text-xs text-primary hover:underline">
+                    Forgot password?
+                  </a>
+                )}
+              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={cn(
+                  "w-full rounded-lg border bg-background px-3 py-2 text-sm transition-colors",
+                  "focus:outline-none focus:ring-2 focus:ring-primary/50",
+                  errors.password ? "border-destructive" : "border-input"
+                )}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password}</p>
               )}
-            />
-            {errors.password && (
-              <p className="text-xs text-destructive">{errors.password}</p>
-            )}
-          </div>
+            </div>
 
-          <button
-            type="submit"
-            className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-lg transition-colors hover:bg-primary/90"
-          >
-            {type === "login" ? "Log In" : "Create Account"}
-          </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-2 px-4 bg-primary text-primary-foreground font-medium rounded-lg transition-colors hover:bg-primary/90 disabled:opacity-70"
+            >
+              {isSubmitting ? "Processing..." : type === "login" ? "Log In" : "Create Account"}
+            </button>
 
-          <div className="text-center text-sm">
-            {type === "login" ? (
-              <p>
-                Don't have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setType("signup")}
-                  className="text-primary hover:underline"
-                >
-                  Sign up
-                </button>
-              </p>
-            ) : (
-              <p>
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setType("login")}
-                  className="text-primary hover:underline"
-                >
-                  Log in
-                </button>
-              </p>
-            )}
-          </div>
-        </form>
+            <div className="text-center text-sm">
+              {type === "login" ? (
+                <p>
+                  Don't have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setType("signup")}
+                    className="text-primary hover:underline"
+                  >
+                    Sign up
+                  </button>
+                </p>
+              ) : (
+                <p>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setType("login")}
+                    className="text-primary hover:underline"
+                  >
+                    Log in
+                  </button>
+                </p>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

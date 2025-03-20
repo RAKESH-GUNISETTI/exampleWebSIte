@@ -3,9 +3,16 @@ import React, { useEffect } from "react";
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import Navbar from "@/components/Navbar";
+import ChatSection from "@/components/ChatSection";
+import TechNewsSection from "@/components/TechNewsSection";
 import { ArrowRight, Github, Twitter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { isLoggedIn } = useAuth();
+
   // Add scroll reveal effect
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -31,6 +38,16 @@ const Index = () => {
     };
   }, []);
 
+  const handleGetStarted = () => {
+    if (isLoggedIn) {
+      navigate("/challenges");
+    } else {
+      // Open auth modal via event
+      const event = new CustomEvent("open-auth-modal", { detail: { type: "signup" } });
+      window.dispatchEvent(event);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -38,6 +55,8 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <Features />
+        <ChatSection />
+        <TechNewsSection />
         
         {/* How It Works Section */}
         <section className="py-20 px-4 bg-secondary/50">
@@ -72,7 +91,8 @@ const Index = () => {
               ].map((item, index) => (
                 <div 
                   key={index} 
-                  className={`glass-card p-8 rounded-xl reveal opacity-0 [animation-delay:${index * 200}ms]`}
+                  className="glass-card p-8 rounded-xl reveal opacity-0 shadow-sm hover:shadow-md transition-all duration-300 hover:translate-y-[-3px]"
+                  style={{ animationDelay: `${index * 200}ms` }}
                 >
                   <div className="text-4xl font-bold text-primary/30 mb-4">{item.step}</div>
                   <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
@@ -92,7 +112,8 @@ const Index = () => {
                 Join SkillNest today and start your journey toward technical excellence with our comprehensive platform.
               </p>
               <button
-                className="px-6 py-3 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 flex items-center gap-2 mx-auto"
+                onClick={handleGetStarted}
+                className="px-6 py-3 rounded-full font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 flex items-center gap-2 mx-auto shadow-md hover:shadow-lg hover:translate-y-[-2px]"
               >
                 Get Started Now
                 <ArrowRight className="h-4 w-4" />
@@ -120,10 +141,10 @@ const Index = () => {
                 An all-in-one platform for technical skill development, learning, and career growth.
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-foreground/70 hover:text-primary transition-colors">
+                <a href="#" className="text-foreground/70 hover:text-primary transition-colors transform hover:scale-110">
                   <Twitter className="h-5 w-5" />
                 </a>
-                <a href="#" className="text-foreground/70 hover:text-primary transition-colors">
+                <a href="#" className="text-foreground/70 hover:text-primary transition-colors transform hover:scale-110">
                   <Github className="h-5 w-5" />
                 </a>
               </div>
@@ -132,20 +153,20 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Features</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">AI Assistant</a></li>
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">Code Analyzer</a></li>
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">Tech News</a></li>
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">Challenges</a></li>
+                <li><a href="/chatbot" className="text-foreground/70 hover:text-primary transition-colors story-link">AI Assistant</a></li>
+                <li><a href="/code-analyzer" className="text-foreground/70 hover:text-primary transition-colors story-link">Code Analyzer</a></li>
+                <li><a href="#tech-news" className="text-foreground/70 hover:text-primary transition-colors story-link">Tech News</a></li>
+                <li><a href="/challenges" className="text-foreground/70 hover:text-primary transition-colors story-link">Challenges</a></li>
               </ul>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4">Company</h4>
               <ul className="space-y-2">
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">About Us</a></li>
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">Contact</a></li>
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors">Terms of Service</a></li>
+                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors story-link">About Us</a></li>
+                <li><button onClick={() => document.dispatchEvent(new CustomEvent("open-contact-dialog"))} className="text-foreground/70 hover:text-primary transition-colors story-link">Contact</button></li>
+                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors story-link">Privacy Policy</a></li>
+                <li><a href="#" className="text-foreground/70 hover:text-primary transition-colors story-link">Terms of Service</a></li>
               </ul>
             </div>
           </div>

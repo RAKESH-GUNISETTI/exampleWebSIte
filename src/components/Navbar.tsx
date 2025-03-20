@@ -1,18 +1,22 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
-import { Menu, X, User, Code, MessageCircle, Trophy, BarChart3 } from "lucide-react";
+import { Menu, X, User, Code, MessageCircle, Trophy, BarChart3, HelpCircle, ArrowLeft } from "lucide-react";
 import AuthModal from "./AuthModal";
+import ContactDialog from "./ContactDialog";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalType, setAuthModalType] = useState<"login" | "signup">("login");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isContactDialogOpen, setIsContactDialogOpen] = useState(false);
+  const { isLoggedIn, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { name: "Home", path: "/", icon: <BarChart3 className="h-4 w-4 mr-2" /> },
@@ -42,17 +46,18 @@ const Navbar = () => {
     closeMenu();
   };
 
-  // Check if user is logged in from localStorage
-  useEffect(() => {
-    const userLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    setIsLoggedIn(userLoggedIn);
-  }, []);
-
-  // Mock login/logout functions
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    localStorage.removeItem("user");
-    setIsLoggedIn(false);
+    logout();
+    closeMenu();
+    if (location.pathname !== "/") {
+      navigate("/");
+    }
+  };
+
+  const canGoBack = location.pathname !== "/";
+
+  const goBack = () => {
+    navigate(-1);
   };
 
   return (
@@ -67,13 +72,24 @@ const Navbar = () => {
       >
         <div className="container mx-auto">
           <nav className="flex items-center justify-between">
-            <Link
-              to="/"
-              className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
-            >
-              <span className="text-primary">Skill</span>
-              <span>Nest</span>
-            </Link>
+            <div className="flex items-center">
+              {canGoBack && (
+                <button
+                  onClick={goBack}
+                  className="mr-3 p-2 rounded-full hover:bg-accent/80 transition-all duration-200"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              <Link
+                to="/"
+                className="text-xl font-bold tracking-tight hover:opacity-80 transition-opacity"
+              >
+                <span className="text-primary">Skill</span>
+                <span>Nest</span>
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
@@ -92,6 +108,12 @@ const Navbar = () => {
                   {item.name}
                 </Link>
               ))}
+              <button
+                onClick={() => setIsContactDialogOpen(true)}
+                className="px-4 py-2 rounded-full text-sm transition-all duration-200 hover:bg-accent/80 text-foreground/80 flex items-center"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" /> Contact
+              </button>
             </div>
 
             {/* Auth and Theme Toggle */}
@@ -106,7 +128,7 @@ const Navbar = () => {
                   </button>
                   <button
                     onClick={() => openAuthModal("signup")}
-                    className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-full transition-all hover:bg-primary/90"
+                    className="px-4 py-2 text-sm font-medium bg-primary text-white rounded-full transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
                   >
                     Sign Up
                   </button>
@@ -179,6 +201,15 @@ const Navbar = () => {
                   {item.name}
                 </Link>
               ))}
+              <button
+                onClick={() => {
+                  setIsContactDialogOpen(true);
+                  closeMenu();
+                }}
+                className="px-4 py-3 rounded-lg flex items-center transition-all duration-200 hover:bg-accent/80 text-foreground/80"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" /> Contact
+              </button>
             </nav>
 
             <div className="mt-auto pt-6 border-t border-border">
@@ -192,7 +223,7 @@ const Navbar = () => {
                   </button>
                   <button
                     onClick={() => openAuthModal("signup")}
-                    className="w-full py-2.5 text-center font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                    className="w-full py-2.5 text-center font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                   >
                     Sign Up
                   </button>
@@ -216,7 +247,12 @@ const Navbar = () => {
         onClose={() => setIsAuthModalOpen(false)}
         type={authModalType}
         setType={setAuthModalType}
-        setIsLoggedIn={setIsLoggedIn}
+      />
+
+      {/* Contact Dialog */}
+      <ContactDialog
+        open={isContactDialogOpen}
+        onOpenChange={setIsContactDialogOpen}
       />
     </>
   );

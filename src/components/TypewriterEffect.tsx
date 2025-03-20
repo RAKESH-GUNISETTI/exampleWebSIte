@@ -53,9 +53,9 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
   }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime]);
 
   return (
-    <span className={`relative ${className}`}>
+    <span className={`inline-flex items-center ${className}`}>
       {displayText}
-      <span className="absolute right-0 border-r-2 border-primary animate-blink h-full"></span>
+      <span className="border-r-2 border-primary h-[1em] ml-1 animate-blink"></span>
     </span>
   );
 };
