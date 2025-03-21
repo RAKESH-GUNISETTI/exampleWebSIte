@@ -261,7 +261,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   }
 
   // Don't render if already logged in or modal is not open
-  if (isLoggedIn || !isModalOpen) return null;
+  if (!isModalOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">

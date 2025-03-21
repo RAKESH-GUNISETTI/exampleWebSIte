@@ -126,11 +126,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error("Error fetching profile:", profileError);
         throw profileError;
+      }
+
+      // If profile doesn't exist yet, it might be because the trigger hasn't run
+      // Let's create it manually
+      if (!profileData) {
+        console.log("Profile not found, creating a new one");
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            first_name: user?.user_metadata?.first_name || "User",
+            last_name: user?.user_metadata?.last_name || "",
+            profession: user?.user_metadata?.profession || "Student",
+            coins: 0
+          });
+          
+        if (insertError) {
+          console.error("Error creating profile:", insertError);
+          throw insertError;
+        }
       }
 
       // Fetch progress data
@@ -138,16 +158,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('user_progress')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
         
       if (progressError) {
         console.error("Error fetching progress:", progressError);
         throw progressError;
       }
+      
+      // If progress doesn't exist yet, create it
+      if (!progressData) {
+        console.log("Progress not found, creating a new one");
+        const { error: insertError } = await supabase
+          .from('user_progress')
+          .insert({
+            user_id: userId,
+            coding: 0,
+            algorithms: 0,
+            frameworks: 0
+          });
+          
+        if (insertError) {
+          console.error("Error creating progress:", insertError);
+          throw insertError;
+        }
+      }
 
-      // Combine the data
-      const profile = profileData as ProfileData;
-      const progress = progressData as ProgressData;
+      // Fetch the data again or use what we have
+      const profile = profileData || { 
+        first_name: user?.user_metadata?.first_name || "User",
+        last_name: user?.user_metadata?.last_name || "",
+        profession: user?.user_metadata?.profession || "Student",
+        coins: 0
+      };
+      
+      const progress = progressData || {
+        coding: 0,
+        algorithms: 0,
+        frameworks: 0
+      };
 
       const newUserData = {
         firstName: profile.first_name || "",

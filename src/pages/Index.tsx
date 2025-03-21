@@ -27,6 +27,7 @@ const Index = () => {
 
   // Scroll to top on component mount to ensure we start at the top of the page
   useEffect(() => {
+    // Force scroll to top when component mounts
     window.scrollTo(0, 0);
     
     // For navbar scroll behavior
@@ -58,7 +59,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen rainbow-bg overflow-y-auto">
+    <div className="min-h-screen rainbow-bg overflow-x-hidden">
       <Navbar 
         onLoginClick={() => {
           setAuthType("login");
@@ -74,7 +75,7 @@ const Index = () => {
         }`}
       />
       
-      <main className="overflow-x-hidden">
+      <main className="overflow-x-hidden overflow-y-visible">
         {/* Hero Section */}
         <section ref={heroRef} className="container min-h-screen flex flex-col justify-center py-20 text-center animate-fade-in">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-balance">
