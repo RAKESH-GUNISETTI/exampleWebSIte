@@ -1,9 +1,9 @@
 // Integration with Gemini AI
 
 // Use the new API key
-const API_KEY = "AIzaSyBqYX5IhjMWGooK210CuPuuy3CEY9wEnV8";
+const API_KEY = "AIzaSyBvkZLZx6cL7tMh4Y9n2keajBfFYebfDLo";
 const BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const TEXT_MODEL = "gemini-pro";
+const TEXT_MODEL = "gemini-1.5-pro";
 const VISION_MODEL = "gemini-pro-vision";
 
 interface GeminiResponse {
