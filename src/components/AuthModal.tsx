@@ -39,6 +39,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | null>(null);
+  const [loginAttempts, setLoginAttempts] = useState(0);
 
   const { login, signup, loginWithGoogle, loginWithGithub } = useAuth();
 
@@ -60,6 +61,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
       window.removeEventListener("open-auth-modal" as any, handleOpenAuthModal as EventListener);
     };
   }, [isModalOpen, handleClose, defaultTab, setType, onOpenChange]);
+
+  // Reset form when modal type changes
+  useEffect(() => {
+    setErrors({});
+    setPasswordStrength(null);
+  }, [activeType]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -127,6 +134,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
       newErrors.password = "Password is required";
     } else if (formData.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters";
+    } else if (activeType === "signup" && passwordStrength === "weak") {
+      newErrors.password = "Please use a stronger password";
     }
 
     setErrors(newErrors);
@@ -147,12 +156,38 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
       if (activeType === "signup") {
         success = await signup(formData);
+        
+        if (!success) {
+          // Handle signup failure
+          setErrors({
+            email: "This email might already be registered"
+          });
+        }
       } else {
+        // For login
         success = await login(formData.email, formData.password);
+        
+        if (!success) {
+          // Increment login attempts on failure
+          setLoginAttempts(prev => prev + 1);
+          
+          if (loginAttempts >= 2) {
+            setErrors({
+              password: "Too many failed attempts. Consider resetting your password."
+            });
+          } else {
+            setErrors({
+              password: "Invalid email or password"
+            });
+          }
+        }
       }
 
       if (success) {
         handleClose?.();
+        
+        // Reset login attempts on success
+        setLoginAttempts(0);
         
         // Show welcome message
         toast.success(
@@ -165,6 +200,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
         );
       }
     } catch (error) {
+      console.error("Auth error:", error);
       toast.error("Authentication error", { 
         description: "Please check your credentials and try again" 
       });
@@ -204,6 +240,12 @@ const AuthModal: React.FC<AuthModalProps> = ({
         return "bg-gray-300";
     }
   };
+
+  const handleForgotPassword = () => {
+    toast.info("Password reset", {
+      description: "Please check your email for instructions to reset your password"
+    });
+  }
 
   if (!isModalOpen) return null;
 
@@ -359,9 +401,13 @@ const AuthModal: React.FC<AuthModalProps> = ({
                   Password
                 </label>
                 {activeType === "login" && (
-                  <a href="#" className="text-xs text-primary hover:underline">
+                  <button 
+                    type="button" 
+                    onClick={handleForgotPassword}
+                    className="text-xs text-primary hover:underline"
+                  >
                     Forgot password?
-                  </a>
+                  </button>
                 )}
               </div>
               <input

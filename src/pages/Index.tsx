@@ -127,7 +127,7 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Features Section - moved before Tech News */}
+        {/* Features Section - before Tech News */}
         <Features />
         
         {/* AI Assistant Section */}

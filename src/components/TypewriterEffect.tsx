@@ -46,9 +46,11 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
           setDisplayText(displayText.substring(0, displayText.length - 1));
         }, deletingSpeed);
       } else {
-        // Always loop through texts, regardless of the loop prop
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % texts.length);
-        setIsTyping(true);
+        // Always loop through texts when loop is true
+        if (loop) {
+          setCurrentIndex((prevIndex) => (prevIndex + 1) % texts.length);
+          setIsTyping(true);
+        }
       }
     }
 
