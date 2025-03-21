@@ -1,116 +1,164 @@
 
 import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ExternalLink, Bookmark, Share, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-interface TechNewsCardProps {
+interface NewsItem {
+  id: number;
   title: string;
-  summary: string;
+  description: string;
+  source: string;
   date: string;
-  author: string;
-  category: string;
+  url: string;
   imageUrl: string;
+  category: string;
 }
 
-const TechNewsCard: React.FC<TechNewsCardProps> = ({
-  title,
-  summary,
-  date,
-  author,
-  category,
-  imageUrl,
-}) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+interface TechNewsCardProps {
+  news: NewsItem;
+  className?: string;
+}
 
-  const getCategoryColorClass = (category: string) => {
-    const categories: Record<string, string> = {
-      AI: "bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300",
-      Blockchain: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
-      Computing: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
-      Web: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
-      Mobile: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300",
-      Security: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
-      Data: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
-    };
-
-    for (const key in categories) {
-      if (category.includes(key)) {
-        return categories[key];
-      }
-    }
-
-    return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-  };
+const TechNewsCard: React.FC<TechNewsCardProps> = ({ news, className }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(false);
 
   return (
     <>
-      <div 
-        className="glass-card rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-        onClick={() => setIsDialogOpen(true)}
+      <Card 
+        className={cn(
+          "overflow-hidden transition-all duration-300 hover:shadow-lg group cursor-pointer",
+          className
+        )}
+        onClick={() => setIsModalOpen(true)}
       >
-        <div className="aspect-video overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={title}
-            className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+        <div className="h-40 overflow-hidden relative">
+          <img 
+            src={news.imageUrl} 
+            alt={news.title} 
+            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
           />
-        </div>
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColorClass(category)}`}>
-              {category}
-            </span>
-            <span className="text-xs text-foreground/70">{date}</span>
+          <div className="absolute top-2 right-2 bg-primary text-white text-xs px-2 py-1 rounded">
+            {news.category}
           </div>
-          <h3 className="font-semibold mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-            {title}
-          </h3>
-          <p className="text-sm text-foreground/70 line-clamp-2 mb-3">
-            {summary}
+        </div>
+        <CardHeader className="p-4 pb-2">
+          <CardTitle className="text-lg line-clamp-2">{news.title}</CardTitle>
+          <CardDescription className="flex items-center gap-1 text-xs">
+            {news.source} • {news.date}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <p className="text-sm text-foreground/70 line-clamp-2">
+            {news.description}
           </p>
-          <div className="text-xs text-foreground/60">
-            By {author}
+        </CardContent>
+        <CardFooter className="p-4 pt-0 flex justify-between">
+          <Button 
+            variant="link" 
+            className="p-0 h-auto text-primary text-xs flex items-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsModalOpen(true);
+            }}
+          >
+            Read more <ExternalLink className="h-3 w-3" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsBookmarked(!isBookmarked);
+              }}
+            >
+              <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-primary text-primary")} />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={(e) => {
+                e.stopPropagation();
+                // Share functionality would go here
+                navigator.share?.({
+                  title: news.title,
+                  text: news.description,
+                  url: news.url,
+                }).catch(() => {
+                  // Fallback for browsers that don't support navigator.share
+                  navigator.clipboard?.writeText(news.url);
+                });
+              }}
+            >
+              <Share className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl">{title}</DialogTitle>
-            <DialogDescription>
-              <div className="flex items-center justify-between mb-2 mt-1">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColorClass(category)}`}>
-                  {category}
-                </span>
-                <span className="text-xs text-foreground/70">{date}</span>
-              </div>
-            </DialogDescription>
-          </DialogHeader>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+          <div className="h-64 overflow-hidden relative">
+            <img 
+              src={news.imageUrl} 
+              alt={news.title} 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute bottom-4 left-4 bg-primary text-white text-sm px-3 py-1 rounded">
+              {news.category}
+            </div>
+          </div>
           
-          <div className="space-y-4">
-            <div className="aspect-video overflow-hidden rounded-md">
-              <img
-                src={imageUrl}
-                alt={title}
-                className="object-cover w-full h-full"
-              />
+          <div className="p-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">{news.title}</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {news.source} • {news.date}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="mt-4 space-y-4">
+              <p>{news.description}</p>
+              <p>
+                This is an expanded view of the news article. In a real application, this would contain
+                the full content of the article, additional images, and related resources.
+              </p>
             </div>
             
-            <p className="text-foreground/80">
-              {summary}
-            </p>
-            
-            <p className="text-foreground/80">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. 
-              Donec euismod, nisl eget ultricies ultricies, nisl nunc
-              tincidunt nunc, eget lacinia nisl nunc eget nisl. Donec euismod, nisl eget
-              ultricies ultricies, nisl nunc tincidunt nunc, eget lacinia nisl nunc eget nisl.
-            </p>
-            
-            <div className="mt-4 pt-4 border-t border-border">
-              <p className="text-sm text-foreground/60">
-                Written by <span className="font-medium text-foreground/80">{author}</span>
-              </p>
+            <div className="flex justify-between mt-6">
+              <Button variant="default">
+                Read Full Article <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => setIsBookmarked(!isBookmarked)}
+                >
+                  <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-primary text-primary")} />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => {
+                    navigator.share?.({
+                      title: news.title,
+                      text: news.description,
+                      url: news.url,
+                    }).catch(() => {
+                      navigator.clipboard?.writeText(news.url);
+                    });
+                  }}
+                >
+                  <Share className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

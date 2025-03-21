@@ -13,6 +13,7 @@ import ContactDialog from "@/components/ContactDialog";
 import Footer from "@/components/Footer";
 import { ArrowRight, Sparkles, Brain, Code, Trophy } from "lucide-react";
 import { Section } from "@/components/ui/section";
+import Hero from "@/components/Hero";
 
 const Index = () => {
   const { isLoggedIn } = useAuth();
@@ -24,7 +25,7 @@ const Index = () => {
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
 
-  // Scroll to top on component mount
+  // Scroll to top on component mount to ensure we start at the top of the page
   useEffect(() => {
     window.scrollTo(0, 0);
     
@@ -80,7 +81,8 @@ const Index = () => {
         }`}
       />
       
-      <main>
+      <main className="overflow-x-hidden">
+        {/* Hero Section */}
         <section ref={heroRef} className="container min-h-screen flex flex-col justify-center py-20 text-center animate-fade-in">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 text-balance">
             Welcome to SkillNest Collective - <br />
@@ -125,6 +127,10 @@ const Index = () => {
           </div>
         </section>
         
+        {/* Features Section - moved before Tech News */}
+        <Features />
+        
+        {/* AI Assistant Section */}
         <Section id="ai-assistant" className="py-10 animate-fade-in-delayed">
           <div className="max-w-4xl mx-auto glass-card p-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center justify-center">
@@ -135,8 +141,7 @@ const Index = () => {
           </div>
         </Section>
         
-        <Features />
-        
+        {/* Tech News Section - moved after AI Assistant */}
         <EnhancedTechNewsSection />
       </main>
       

@@ -53,7 +53,7 @@ const TypewriterEffect: React.FC<TypewriterEffectProps> = ({
     }
 
     return () => clearTimeout(timeout);
-  }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime]);
+  }, [texts, currentIndex, displayText, isTyping, isPaused, typingSpeed, deletingSpeed, pauseTime, loop]);
 
   return (
     <span className={`inline-flex items-center ${className}`}>

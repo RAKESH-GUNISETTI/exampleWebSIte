@@ -3,10 +3,24 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "./ThemeToggle";
-import { Menu, X, User, Code, MessageCircle, Trophy, BarChart3, HelpCircle, ArrowLeft } from "lucide-react";
+import { 
+  Menu, X, User, Code, MessageCircle, Trophy, BarChart3, 
+  HelpCircle, ArrowLeft, LogOut, Settings, CreditCard,
+  CheckCircle, BookOpen, Award, Star
+} from "lucide-react";
 import AuthModal from "./AuthModal";
 import ContactDialog from "./ContactDialog";
 import { useAuth } from "@/context/AuthContext";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Progress } from "@/components/ui/progress";
 
 interface NavbarProps {
   onLoginClick?: () => void;
@@ -35,7 +49,6 @@ const Navbar: React.FC<NavbarProps> = ({
     { name: "Code Analyzer", path: "/code-analyzer", icon: <Code className="h-4 w-4 mr-2" /> },
     { name: "AI Assistant", path: "/chatbot", icon: <MessageCircle className="h-4 w-4 mr-2" /> },
     { name: "Challenges", path: "/challenges", icon: <Trophy className="h-4 w-4 mr-2" /> },
-    { name: "Profile", path: "/profile", icon: <User className="h-4 w-4 mr-2" /> },
   ];
 
   useEffect(() => {
@@ -81,10 +94,20 @@ const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  const goToProfile = () => {
+    navigate("/profile");
+    closeMenu();
+  };
+
   const canGoBack = location.pathname !== "/";
 
   const goBack = () => {
     navigate(-1);
+  };
+
+  const getProfileInitials = () => {
+    if (!userData) return "U";
+    return `${userData.firstName.charAt(0)}${userData.lastName.charAt(0)}`;
   };
 
   return (
@@ -162,13 +185,93 @@ const Navbar: React.FC<NavbarProps> = ({
                   </button>
                 </div>
               ) : (
-                <div className="hidden md:flex items-center space-x-2">
-                  <button
-                    onClick={handleLogout}
-                    className="px-4 py-2 text-sm rounded-full transition-all hover:bg-accent"
-                  >
-                    Log Out
-                  </button>
+                <div className="hidden md:flex items-center space-x-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent/80 transition-colors">
+                        <Avatar className="h-8 w-8 transition-transform hover:scale-105">
+                          <AvatarImage src="" alt={userData?.firstName} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {getProfileInitials()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium hidden lg:inline-block">
+                          {userData?.firstName}
+                        </span>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-72">
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col gap-y-1">
+                          <p className="font-bold text-base">{userData?.firstName} {userData?.lastName}</p>
+                          <p className="text-xs text-muted-foreground">{userData?.email}</p>
+                          <span className="text-xs text-primary">{userData?.profession}</span>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      {/* Progress Stats */}
+                      <div className="px-2 py-2">
+                        <div className="flex justify-between mb-1 items-center">
+                          <span className="text-xs flex items-center gap-1">
+                            <CreditCard className="h-3 w-3 text-primary" /> Coins Earned
+                          </span>
+                          <span className="text-xs font-medium">{userData?.coins || 0}</span>
+                        </div>
+                        
+                        <div className="space-y-3 mt-3">
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <Code className="h-3 w-3 text-blue-500" /> Coding
+                              </span>
+                              <span>{userData?.progress?.coding || 0}%</span>
+                            </div>
+                            <Progress value={userData?.progress?.coding || 0} className="h-1.5" />
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <BookOpen className="h-3 w-3 text-yellow-500" /> Algorithms
+                              </span>
+                              <span>{userData?.progress?.algorithms || 0}%</span>
+                            </div>
+                            <Progress value={userData?.progress?.algorithms || 0} className="h-1.5" />
+                          </div>
+                          
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <Settings className="h-3 w-3 text-green-500" /> Frameworks
+                              </span>
+                              <span>{userData?.progress?.frameworks || 0}%</span>
+                            </div>
+                            <Progress value={userData?.progress?.frameworks || 0} className="h-1.5" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={goToProfile} className="cursor-pointer">
+                        <User className="h-4 w-4 mr-2" />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/challenges")} className="cursor-pointer">
+                        <Trophy className="h-4 w-4 mr-2" />
+                        <span>My Challenges</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate("/settings")} className="cursor-pointer">
+                        <Settings className="h-4 w-4 mr-2" />
+                        <span>Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 focus:text-red-500">
+                        <LogOut className="h-4 w-4 mr-2" />
+                        <span>Log Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               )}
 
@@ -211,7 +314,41 @@ const Navbar: React.FC<NavbarProps> = ({
               </button>
             </div>
 
-            <nav className="flex flex-col space-y-4 mt-8">
+            {isLoggedIn && (
+              <div className="mb-6 mt-2">
+                <div className="flex items-center mb-4">
+                  <Avatar className="h-10 w-10 mr-3">
+                    <AvatarImage src="" alt={userData?.firstName} />
+                    <AvatarFallback className="bg-primary/10 text-primary">
+                      {getProfileInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">{userData?.firstName} {userData?.lastName}</p>
+                    <p className="text-xs text-muted-foreground">{userData?.email}</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm flex items-center gap-1">
+                      <CreditCard className="h-4 w-4 text-primary" /> Coins Earned
+                    </span>
+                    <span className="font-medium">{userData?.coins || 0}</span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span>Coding Skills</span>
+                      <span>{userData?.progress?.coding || 0}%</span>
+                    </div>
+                    <Progress value={userData?.progress?.coding || 0} className="h-1.5" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <nav className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
@@ -256,8 +393,9 @@ const Navbar: React.FC<NavbarProps> = ({
               ) : (
                 <button
                   onClick={handleLogout}
-                  className="w-full py-2.5 text-center rounded-lg border border-input hover:bg-accent/80 transition-colors"
+                  className="w-full py-2.5 text-center rounded-lg border border-input hover:bg-accent/80 transition-colors text-red-500 flex items-center justify-center"
                 >
+                  <LogOut className="h-4 w-4 mr-2" />
                   Log Out
                 </button>
               )}

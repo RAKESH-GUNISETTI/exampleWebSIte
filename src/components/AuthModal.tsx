@@ -153,6 +153,16 @@ const AuthModal: React.FC<AuthModalProps> = ({
 
       if (success) {
         handleClose?.();
+        
+        // Show welcome message
+        toast.success(
+          activeType === "login" ? "Welcome back!" : "Account created successfully!", 
+          { 
+            description: activeType === "login" 
+              ? "You're now logged in to your account." 
+              : "Your account has been created and you're now logged in."
+          }
+        );
       }
     } catch (error) {
       toast.error("Authentication error", { 
@@ -171,6 +181,9 @@ const AuthModal: React.FC<AuthModalProps> = ({
         await loginWithGithub();
       }
       // Modal will be closed by auth state change
+      toast.success(`Signed in with ${provider}`, {
+        description: `You've successfully logged in with your ${provider} account.`
+      });
     } catch (error) {
       console.error(`${provider} login error:`, error);
       toast.error(`${provider} login failed`, {
