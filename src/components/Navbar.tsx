@@ -66,6 +66,10 @@ const Navbar: React.FC<NavbarProps> = ({
   const closeMenu = () => setIsMenuOpen(false);
 
   const openAuthModal = (type: "login" | "signup") => {
+    if (isLoggedIn) {
+      return; // Don't open auth modal if already logged in
+    }
+    
     if (onLoginClick && type === "login") {
       onLoginClick();
     } else if (onSignupClick && type === "signup") {

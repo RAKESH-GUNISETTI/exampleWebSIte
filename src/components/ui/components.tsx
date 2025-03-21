@@ -19,7 +19,7 @@ export {
 export { Progress } from "@/components/ui/progress";
 export { Button } from "@/components/ui/button";
 export { Badge } from "@/components/ui/badge";
-export { ScrollArea } from "@/components/ui/scroll-area";
+export { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export {
   NavigationMenu,
@@ -31,3 +31,17 @@ export {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+
+export {
+  Avatar,
+  AvatarFallback,
+  AvatarImage
+} from "@/components/ui/avatar";

@@ -63,12 +63,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userData, setUserData] = useState<UserData | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Set up auth state listener
   useEffect(() => {
+    console.log("Setting up auth state listener...");
+    
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         console.log("Auth state change:", event);
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -77,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           // Load user data on login
           if (newSession?.user) {
-            fetchUserData(newSession.user.id);
+            await fetchUserData(newSession.user.id);
           }
         } else if (event === 'SIGNED_OUT') {
           setUserData(null);
@@ -86,21 +89,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoggedIn(!!currentSession);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("Current session:", currentSession ? "Found" : "None");
+        
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setIsLoggedIn(!!currentSession);
 
-      if (currentSession?.user) {
-        fetchUserData(currentSession.user.id);
+        if (currentSession?.user) {
+          await fetchUserData(currentSession.user.id);
+        }
+        
+        setIsInitialized(true);
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        setIsInitialized(true);
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      console.log("Cleaning up auth subscription");
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserData = async (userId: string) => {
     try {
+      console.log("Fetching user data for:", userId);
+      
       // Fetch profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -129,7 +149,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profile = profileData as ProfileData;
       const progress = progressData as ProgressData;
 
-      setUserData({
+      const newUserData = {
         firstName: profile.first_name || "",
         lastName: profile.last_name || "",
         email: user?.email || "",
@@ -140,7 +160,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           algorithms: progress.algorithms || 0,
           frameworks: progress.frameworks || 0,
         },
-      });
+      };
+      
+      console.log("User data fetched successfully:", newUserData);
+      setUserData(newUserData);
     } catch (error) {
       console.error("Error fetching user data:", error);
       // If there's an error, set default data
@@ -161,16 +184,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Attempting login with email:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        console.error("Login error:", error.message);
         toast.error(error.message);
         return false;
       }
       
+      console.log("Login successful:", data.user?.id);
       toast.success("Logged in successfully!");
       return true;
     } catch (error) {
@@ -182,7 +208,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (formData: SignupFormData): Promise<boolean> => {
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log("Attempting signup with email:", formData.email);
+      const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
@@ -195,10 +222,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
+        console.error("Signup error:", error.message);
         toast.error(error.message);
         return false;
       }
       
+      console.log("Signup successful:", data.user?.id);
       toast.success("Account created successfully! Please check your email to verify your account.");
       return true;
     } catch (error) {
@@ -210,14 +239,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async (): Promise<void> => {
     try {
+      console.log("Attempting Google login");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}`,
         },
       });
       
       if (error) {
+        console.error("Google login error:", error.message);
         toast.error(error.message);
       }
     } catch (error) {
@@ -228,14 +259,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGithub = async (): Promise<void> => {
     try {
+      console.log("Attempting GitHub login");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}`,
         },
       });
       
       if (error) {
+        console.error("GitHub login error:", error.message);
         toast.error(error.message);
       }
     } catch (error) {
@@ -246,9 +279,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
+      console.log("Attempting logout");
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        console.error("Logout error:", error.message);
         toast.error(error.message);
         return;
       }
@@ -258,6 +293,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setSession(null);
       
+      console.log("Logout successful");
       toast.success("Logged out successfully!");
     } catch (error) {
       console.error("Logout error:", error);

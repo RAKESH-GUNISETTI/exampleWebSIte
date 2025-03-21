@@ -14,6 +14,7 @@ import CodeAnalyzer from "./pages/CodeAnalyzer";
 import Challenges from "./pages/Challenges";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,15 @@ const queryClient = new QueryClient({
   },
 });
 
+// This component ensures that each page scrolls to the top when navigated to
+const ScrollToTop = ({ children }: { children: React.ReactNode }) => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+  
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
@@ -33,12 +43,12 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/chatbot" element={<ChatBot />} />
-              <Route path="/code-analyzer" element={<CodeAnalyzer />} />
-              <Route path="/challenges" element={<Challenges />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/" element={<ScrollToTop><Index /></ScrollToTop>} />
+              <Route path="/chatbot" element={<ScrollToTop><ChatBot /></ScrollToTop>} />
+              <Route path="/code-analyzer" element={<ScrollToTop><CodeAnalyzer /></ScrollToTop>} />
+              <Route path="/challenges" element={<ScrollToTop><Challenges /></ScrollToTop>} />
+              <Route path="/profile" element={<ScrollToTop><Profile /></ScrollToTop>} />
+              <Route path="*" element={<ScrollToTop><NotFound /></ScrollToTop>} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>

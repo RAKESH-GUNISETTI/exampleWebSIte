@@ -57,15 +57,8 @@ const Index = () => {
     setIsContactOpen(true);
   };
 
-  const scrollToSection = (section: string) => {
-    const element = document.getElementById(section);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
-    <div className="min-h-screen rainbow-bg">
+    <div className="min-h-screen rainbow-bg overflow-y-auto">
       <Navbar 
         onLoginClick={() => {
           setAuthType("login");

@@ -41,10 +41,23 @@ const AuthModal: React.FC<AuthModalProps> = ({
   const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
 
-  const { login, signup, loginWithGoogle, loginWithGithub } = useAuth();
+  const { login, signup, loginWithGoogle, loginWithGithub, isLoggedIn } = useAuth();
+
+  // Close modal if user is already logged in
+  useEffect(() => {
+    if (isLoggedIn && isModalOpen) {
+      handleClose?.();
+      toast.success("You are already logged in");
+    }
+  }, [isLoggedIn, isModalOpen, handleClose]);
 
   useEffect(() => {
     const handleOpenAuthModal = (e: CustomEvent) => {
+      if (isLoggedIn) {
+        toast.info("You are already logged in");
+        return;
+      }
+      
       if (defaultTab || setType) {
         const newType = e.detail.type || "login";
         setType?.(newType);
@@ -60,7 +73,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     return () => {
       window.removeEventListener("open-auth-modal" as any, handleOpenAuthModal as EventListener);
     };
-  }, [isModalOpen, handleClose, defaultTab, setType, onOpenChange]);
+  }, [isLoggedIn, isModalOpen, handleClose, defaultTab, setType, onOpenChange]);
 
   // Reset form when modal type changes
   useEffect(() => {
@@ -247,7 +260,8 @@ const AuthModal: React.FC<AuthModalProps> = ({
     });
   }
 
-  if (!isModalOpen) return null;
+  // Don't render if already logged in or modal is not open
+  if (isLoggedIn || !isModalOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm animate-fade-in">
