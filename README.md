@@ -1,1 +1,1 @@
-[Visit My Project](https://skillnest-collective.lovable.app)
+[Visit My Project](https://example-web-s-ite.vercel.app/)
